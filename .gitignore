@@ -1,0 +1,71 @@
+# =========================
+# 🔐 SECRETS / ENV
+# =========================
+.env
+.env.*
+*.env
+.env.local
+.env.dev
+.env.prod
+
+# =========================
+# 🐍 Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# =========================
+# 🧪 Virtual environments
+# =========================
+.venv/
+venv/
+ENV/
+env/
+
+# =========================
+# 🧠 IDE / OS
+# =========================
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# =========================
+# 🧪 Tests / coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# =========================
+# 📦 Build / cache
+# =========================
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# =========================
+# 📝 Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# 🤖 AI / runtime artifacts
+# =========================
+*.sqlite
+*.db
+.cache/
+.tmp/
+tmp/
+
+# =========================
+# 🔎 Local debug / scripts
+# =========================
+debug_*.py
+manual_test.py
