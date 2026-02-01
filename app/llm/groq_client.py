@@ -11,7 +11,7 @@ class GroqClient(LlmClient):
         
         self.client = Groq(api_key=settings.groq_api_key)
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(self, prompt: str, is_json: bool = True) -> str:
         try:
             # Run the synchronous Groq API call in a thread pool
             loop = asyncio.get_event_loop()

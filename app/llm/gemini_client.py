@@ -14,7 +14,7 @@ class GeminiClient(LlmClient):
         # Сохраняем имя модели (например, 'gemini-2.0-flash')
         self.model_name = settings.gemini_model
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(self, prompt: str, is_json: bool = True) -> str:
         try:
             # Выполняем синхронный вызов в экзекуторе,
             # так как методы Client в текущей версии SDK блокирующие
@@ -22,12 +22,15 @@ class GeminiClient(LlmClient):
 
             def sync_generate():
                 from google.genai import types
+                config = None
+                if is_json:
+                    config = types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
                 return self.client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json"
-                    )
+                    config=config
                 )
 
             # Add timeout to prevent infinite hangs

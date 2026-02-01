@@ -100,9 +100,13 @@ class RabbitConsumer:
             result_payload = await self._router.handle(task)
 
             # 3) Формируем ответ (с корреляцией/версией)
+            status = "SUCCESS"
+            if task.type == "CHAT":
+                status = "CHAT_RESPONSE"
+
             result = AiResult(
                 task_id=task.task_id,
-                status="SUCCESS",
+                status=status,
                 result=result_payload,
                 correlation_id=task.correlation_id,
                 schema_version=task.schema_version,
@@ -118,7 +122,12 @@ class RabbitConsumer:
             )
 
         # 4) Публикуем туда, куда указал отправитель, иначе default
-        await self._producer.publish_result(result, reply_to=task.reply_to)
+        try:
+            await self._producer.publish_result(result, reply_to=task.reply_to)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to publish result for task {task.task_id}: {e}")
+            raise
 
     async def _send_to_retry_or_dlq(self, message: aio_pika.IncomingMessage) -> None:
         assert self._channel is not None

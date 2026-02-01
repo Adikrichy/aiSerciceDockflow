@@ -7,8 +7,8 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 
-TaskType = Literal["DOCUMENT_ANALYZE", "WORKFLOW_SUGGEST", "PING"]
-TaskStatus = Literal["OK", "SUCCESS", "ERROR", "PROCESSING"]
+TaskType = Literal["DOCUMENT_ANALYZE", "WORKFLOW_SUGGEST", "PING", "CHAT", "DOCUMENT_REVIEW"]
+TaskStatus = Literal["OK", "SUCCESS", "ERROR", "PROCESSING", "CHAT_RESPONSE"]
 
 DockType = Literal[
     "contract", "instruction", "policy", "report", "order", "letter", 
@@ -40,6 +40,29 @@ class DocumentAnalyzePayload(BaseModel):
 
     text: Optional[str] = None
     provider: Optional[str] = None
+
+
+class ChatPayload(BaseModel):
+    content: str
+    channel_id: int
+    sender_id: int
+    sender_name: str
+    document_id: Optional[int] = None
+    version_id: Optional[int] = None
+    file_url: Optional[HttpUrl] = None
+    service_token: Optional[str] = None
+    mime_type: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size: Optional[int] = None
+    chat_type: Literal["GENERAL", "DOCUMENT"] = "GENERAL"
+    history: list[dict[str, Any]] = Field(default_factory=list)
+    context: Optional[dict[str, Any]] = None
+
+
+class ChatResult(BaseModel):
+    response: str
+    channel_id: int
+    used_model: Optional[str] = None
 
 
 class SemanticSummary(BaseModel):
@@ -194,6 +217,24 @@ class DocumentAnalyzeResult(BaseModel):
             "kz": "kz",
         }
         return mapping.get(val, "unknown")
+
+
+class DocumentReviewPayload(DocumentAnalyzePayload):
+    topic: Optional[str] = None
+
+
+class DocumentWeakness(BaseModel):
+    title: str
+    description: str
+    topic_relevance: str
+    severity: RiskSeverity
+
+
+class DocumentReviewResult(BaseModel):
+    weaknesses: list[DocumentWeakness] = Field(default_factory=list)
+    recommendation: str
+    approval_suggestion: Literal["approve", "reject", "request_changes", "unknown"]
+    confidence: float = 0.0
 
 
 class AiTask(Envelope):

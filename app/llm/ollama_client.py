@@ -10,7 +10,7 @@ class OllamaClient(LlmClient):
         self.base_url = settings.ollama_base_url.rstrip('/')
         self.model = settings.ollama_model
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(self, prompt: str, is_json: bool = True) -> str:
         try:
             # Prepare the request payload
             payload = {

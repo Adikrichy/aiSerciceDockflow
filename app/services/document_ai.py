@@ -19,7 +19,12 @@ from app.exceptions.document_errors import (
     TextExtractionError
 )
 from app.llm.client import LlmClient
-from app.schemas.messages import DocumentAnalyzePayload, DocumentAnalyzeResult
+from app.schemas.messages import (
+    DocumentAnalyzePayload, 
+    DocumentAnalyzeResult,
+    DocumentReviewPayload,
+    DocumentReviewResult
+)
 
 
 MAX_TEXT_CHARS = 80_000  # ограничение, чтобы не улететь по токенам
@@ -551,4 +556,69 @@ class DocumentAiService:
         raise JsonParsingError(
             "No valid JSON object found in LLM response",
             cleaned
+        )
+
+    async def review(self, payload: dict) -> dict:
+        """
+        Perform a specialized document review focusing on weaknesses and approval suggestions.
+        """
+        try:
+            p = DocumentReviewPayload.model_validate(payload)
+            logger.info("Starting document review", extra={"document_id": p.document_id, "topic": p.topic})
+            
+            text = await self._get_document_text(p)
+            if not text.strip():
+                return DocumentReviewResult(
+                    recommendation="Cannot review empty document.",
+                    approval_suggestion="unknown"
+                ).model_dump()
+
+            if len(text) > MAX_TEXT_CHARS:
+                text = text[:MAX_TEXT_CHARS] + "\n\n[TRUNCATED]"
+
+            prompt = self._build_review_prompt(text, p.topic)
+            llm = self._llm_factory(p.provider) if p.provider else self._llm_factory()
+            
+            answer = await self._generate_with_retry(prompt, llm=llm)
+            data = self._safe_json_loads(answer)
+            result = DocumentReviewResult.model_validate(data)
+            
+            return result.model_dump()
+        except Exception as e:
+            logger.error("Document review failed", extra={"error": str(e)})
+            raise
+
+    def _build_review_prompt(self, text: str, topic: Optional[str]) -> str:
+        topic_context = f"The review should specifically focus on this topic: {topic}" if topic else "Perform a general document review."
+        
+        return (
+            "You are DockFlow AI Review Specialist.\n\n"
+            "Your goal is to perform a deep analysis of the document to identify weaknesses, "
+            "risks, and provide an approval recommendation.\n\n"
+            f"{topic_context}\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "STRICT OUTPUT RULES\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "1. Output ONLY valid JSON.\n"
+            "2. No explanations, comments, or markdown.\n"
+            "3. Be critical. Look for contradictions, missing clauses, or vague language.\n"
+            "4. Suggest an action for the reviewer (approve, reject, or request_changes).\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "OUTPUT JSON SCHEMA\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "{\n"
+            '  "weaknesses": [\n'
+            '    {\n'
+            '      "title": "Short title of the issue",\n'
+            '      "description": "Detailed explanation of why this is a weakness",\n'
+            '      "topic_relevance": "How this relates to the requested topic",\n'
+            '      "severity": "low | medium | high | unknown"\n'
+            '    }\n'
+            '  ],\n'
+            '  "recommendation": "Overall summary and advice for the human reviewer",\n'
+            '  "approval_suggestion": "approve | reject | request_changes | unknown",\n'
+            '  "confidence": 0.0\n'
+            "}\n\n"
+            "DOCUMENT:\n"
+            f"{text}"
         )

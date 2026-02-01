@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     
     # Ollama Local
     ollama_base_url: str = Field(default="http://localhost:11434")
-    ollama_model: str = Field(default="llama2")
+    ollama_model: str = Field(default="mistral-large-3:675b-cloud")
 
     rabbitmq_retry_queue: str = Field(default="ai_tasks.retry")
     rabbitmq_dlq: str = Field(default="ai_tasks.dlq")
