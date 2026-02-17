@@ -103,6 +103,9 @@ class RabbitConsumer:
             status = "SUCCESS"
             if task.type == "CHAT":
                 status = "CHAT_RESPONSE"
+            elif task.type == "WORKFLOW_SUGGEST":
+                status = "WORKFLOW_SUGGEST_RESPONSE"
+            # DOCUMENT_REVIEW now falls back to default "SUCCESS"
 
             result = AiResult(
                 task_id=task.task_id,
@@ -112,6 +115,9 @@ class RabbitConsumer:
                 schema_version=task.schema_version,
             )
         except Exception as e:
+            import traceback
+            print(f"!!! Error processing task {task.task_id}: {str(e)}")
+            traceback.print_exc()
             result = AiResult(
                 task_id=task.task_id,
                 status="ERROR",

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 
 TaskType = Literal["DOCUMENT_ANALYZE", "WORKFLOW_SUGGEST", "PING", "CHAT", "DOCUMENT_REVIEW"]
-TaskStatus = Literal["OK", "SUCCESS", "ERROR", "PROCESSING", "CHAT_RESPONSE"]
+TaskStatus = Literal["OK", "SUCCESS", "ERROR", "PROCESSING", "CHAT_RESPONSE", "WORKFLOW_SUGGEST_RESPONSE", "DOCUMENT_REVIEW_RESPONSE"]
 
 DockType = Literal[
     "contract", "instruction", "policy", "report", "order", "letter", 

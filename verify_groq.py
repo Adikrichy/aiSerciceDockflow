@@ -13,7 +13,7 @@ except ImportError as e:
 async def test_groq():
     load_dotenv()
     api_key = os.getenv("GROQ_API_KEY")
-    model_name = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     
     if not api_key:
         print("ERROR: GROQ_API_KEY not found in .env")
