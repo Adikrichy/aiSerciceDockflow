@@ -7,8 +7,8 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 
-TaskType = Literal["DOCUMENT_ANALYZE", "WORKFLOW_SUGGEST", "PING", "CHAT", "DOCUMENT_REVIEW"]
-TaskStatus = Literal["OK", "SUCCESS", "ERROR", "PROCESSING", "CHAT_RESPONSE", "WORKFLOW_SUGGEST_RESPONSE", "DOCUMENT_REVIEW_RESPONSE"]
+TaskType = Literal["DOCUMENT_ANALYZE", "WORKFLOW_SUGGEST", "PING", "CHAT", "DOCUMENT_REVIEW", "REPORT_INSIGHTS"]
+TaskStatus = Literal["OK", "SUCCESS", "ERROR", "PROCESSING", "CHAT_RESPONSE", "WORKFLOW_SUGGEST_RESPONSE", "DOCUMENT_REVIEW_RESPONSE", "REPORT_INSIGHTS_RESPONSE"]
 
 DockType = Literal[
     "contract", "instruction", "policy", "report", "order", "letter", 
@@ -232,9 +232,57 @@ class DocumentWeakness(BaseModel):
 
 class DocumentReviewResult(BaseModel):
     weaknesses: list[DocumentWeakness] = Field(default_factory=list)
-    recommendation: str
-    approval_suggestion: Literal["approve", "reject", "request_changes", "unknown"]
+    recommendation: str = "Review not generated."
+    approval_suggestion: Literal["approve", "reject", "request_changes", "unknown"] = "unknown"
     confidence: float = 0.0
+
+    @pydantic.field_validator("weaknesses", mode="before")
+    @classmethod
+    def normalize_weaknesses(cls, v: Any):
+        if v is None:
+            return []
+        if isinstance(v, dict):
+            # If AI returned a single object instead of list
+            return [v]
+        if isinstance(v, list):
+            return v
+        return []
+
+    @pydantic.field_validator("recommendation", mode="before")
+    @classmethod
+    def normalize_recommendation(cls, v: Any):
+        if v is None or not str(v).strip():
+            return "No recommendation provided."
+        return str(v)
+
+    @pydantic.field_validator("approval_suggestion", mode="before")
+    @classmethod
+    def normalize_approval_suggestion(cls, v: Any):
+        if v is None:
+            return "unknown"
+        
+        val = str(v).strip().lower()
+        mapping = {
+            "approve": "approve",
+            "reject": "reject",
+            "request_changes": "request_changes",
+            "request changes": "request_changes",
+            "refuse": "reject",
+            "ok": "approve",
+        }
+        return mapping.get(val, "unknown")
+
+
+class ReportInsightsPayload(BaseModel):
+    report_data: dict[str, Any]
+    company_id: int
+    time_range: str
+    provider: Optional[str] = None
+
+
+class ReportInsightsResult(BaseModel):
+    insights: str
+
 
 
 class AiTask(Envelope):

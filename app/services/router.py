@@ -1,5 +1,6 @@
 from app.schemas.messages import AiTask
 from app.services.chat_ai import ChatAiService
+from app.services.report_insights_service import ReportInsightsService
 
 
 class TaskRouter:
@@ -7,6 +8,7 @@ class TaskRouter:
         self._document_service = document_service
         self._workflow_service = workflow_service
         self._chat_service = ChatAiService(document_service)
+        self._report_service = ReportInsightsService(document_service._llm_factory) # Reusing factory from document service
 
     async def handle(self, task: AiTask) -> dict:
         if task.type == "PING":
@@ -23,5 +25,8 @@ class TaskRouter:
 
         if task.type == "CHAT":
             return await self._chat_service.chat(task.payload)
+
+        if task.type == "REPORT_INSIGHTS":
+            return await self._report_service.get_insights(task.payload)
 
         raise ValueError(f"Unknown task type: {task.type}")

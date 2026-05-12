@@ -105,6 +105,8 @@ class RabbitConsumer:
                 status = "CHAT_RESPONSE"
             elif task.type == "WORKFLOW_SUGGEST":
                 status = "WORKFLOW_SUGGEST_RESPONSE"
+            elif task.type == "REPORT_INSIGHTS":
+                status = "REPORT_INSIGHTS_RESPONSE"
             # DOCUMENT_REVIEW now falls back to default "SUCCESS"
 
             result = AiResult(

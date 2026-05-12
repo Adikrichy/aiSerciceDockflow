@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for AI service providers
+Test script for AI service providers (ASCII only for Windows compatibility)
 """
 
 import asyncio
@@ -18,7 +18,7 @@ async def test_provider(provider_name: str):
     
     try:
         client = create_llm_client(provider_name)
-        print(f"✓ Client created successfully")
+        print(f"OK: Client created successfully")
         
         # Test prompt
         prompt = "Summarize this in one sentence: Artificial Intelligence is transforming how we work and live."
@@ -26,11 +26,11 @@ async def test_provider(provider_name: str):
         
         response = await client.generate(prompt)
         print(f"Response: {response}")
-        print(f"✓ {provider_name} is working!")
+        print(f"OK: {provider_name} is working!")
         return True
         
     except Exception as e:
-        print(f"✗ {provider_name} failed: {str(e)}")
+        print(f"FAIL: {provider_name} failed: {str(e)}")
         return False
 
 async def main():
@@ -45,13 +45,13 @@ async def main():
         try:
             results[provider] = await test_provider(provider)
         except Exception as e:
-            print(f"✗ {provider} test failed with exception: {str(e)}")
+            print(f"FAIL: {provider} test failed with exception: {str(e)}")
             results[provider] = False
     
     print("\n" + "=" * 40)
     print("SUMMARY:")
     for provider, success in results.items():
-        status = "✓ WORKING" if success else "✗ FAILED"
+        status = "OK: WORKING" if success else "FAIL: FAILED"
         print(f"{provider:10} : {status}")
 
 if __name__ == "__main__":
